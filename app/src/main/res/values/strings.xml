@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">Mobile Learning</string>
     <string name="title_activity_login">LoginActivity</string>
-    <string name="email">Email</string>
+    <string name="username">Username</string>
     <string name="login">Log in</string>
+    <string name="title_home">Kelas Anda</string>
     <string name="password">Password</string>
     <string name="title_activity_home">HomeActivity</string>
-
+    <string name="title_text">Mobile Learning\nPondok Pesantren</string>
+    <string name="title_home_siswa">Kelas Anda</string>
 </resources>

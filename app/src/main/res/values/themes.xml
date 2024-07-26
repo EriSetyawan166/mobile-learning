@@ -1,5 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.MobileLearning" parent="Theme.MaterialComponents.Light.DarkActionBar" />
+    <style name="Theme.MobileLearning" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <item name="colorPrimary">@color/orange</item>
+        <item name="android:statusBarColor">@color/orange</item>
+        <item name="android:textViewStyle">@style/DefaultTextViewStyle</item>
+        <item name="buttonStyle">@style/DefaultButtonStyle</item>
+        <item name="editTextStyle">@style/DefaultEditTextStyle</item>
+        <item name="actionBarStyle">@style/Custom.ActionBar</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Actionbar</item>
+    </style>
+
+    <style name="Theme.MobileLearning.NoAppBar" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/orange</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:textViewStyle">@style/DefaultTextViewStyle</item>
+        <item name="buttonStyle">@style/DefaultButtonStyle</item>
+        <item name="editTextStyle">@style/DefaultEditTextStyle</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="Custom.ActionBar" parent="Widget.MaterialComponents.Light.ActionBar.Solid">
+        <item name="background">@color/white</item>
+    </style>
+
+    <style name="ThemeOverlay.Actionbar" parent="ThemeOverlay.MaterialComponents.ActionBar.Surface" >
+        <item name="android:textColorPrimary">@color/black</item>
+    </style>
+
+
+    <style name="DefaultTextViewStyle" parent="@android:style/Widget.TextView">
+        <item name="android:fontFamily">@font/verdana_bold</item>
+    </style>
+
+    <style name="DefaultButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:fontFamily">@font/verdana_bold</item>
+    </style>
+
+    <style name="DefaultEditTextStyle" parent="Widget.AppCompat.EditText">
+        <item name="android:fontFamily">@font/verdana_bold</item>
+    </style>
 </resources>
