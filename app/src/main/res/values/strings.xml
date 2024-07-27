@@ -6,6 +6,12 @@
     <string name="title_home">Kelas Anda</string>
     <string name="password">Password</string>
     <string name="title_activity_home">HomeActivity</string>
-    <string name="title_text">Mobile Learning\nPondok Pesantren</string>
+    <string name="title_text">Mobile Learning</string>
+    <string name="title_text_sub">Pondok Pesantren</string>
     <string name="title_home_siswa">Kelas Anda</string>
+    <string name="courses">Courses</string>
+    <string name="profile">Profile</string>
+    <string name="settings">Settings</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

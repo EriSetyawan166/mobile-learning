@@ -18,6 +18,12 @@ import com.example.mobilelearning.Kelas
 import com.example.mobilelearning.KelasAdapter
 import com.example.mobilelearning.R
 import org.json.JSONObject
+import androidx.fragment.app.Fragment
+import com.example.mobilelearning.CourseFragment
+import com.example.mobilelearning.ProfileFragment
+import com.example.mobilelearning.SettingsFragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
+
 
 class HomeSiswaActivity : AppCompatActivity() {
 
@@ -26,6 +32,7 @@ class HomeSiswaActivity : AppCompatActivity() {
     private lateinit var kelasList: ArrayList<Kelas>
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var toolbar: Toolbar
+    lateinit var bottomNav : BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,57 +40,33 @@ class HomeSiswaActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-        recyclerView = findViewById(R.id.recyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        kelasList = ArrayList()
-        kelasAdapter = KelasAdapter(kelasList)
-        recyclerView.adapter = kelasAdapter
-        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
-        swipeRefreshLayout.setOnRefreshListener {
-            fetchClasses()
-        }
-
-        fetchClasses()
-    }
-
-    private fun fetchClasses() {
-        val queue = Volley.newRequestQueue(this)
-        val url = "http://192.168.100.121/mobile_learning_api/ambilKelas.php"
-
-        val jsonObjectRequest = JsonObjectRequest(
-            Request.Method.GET, url, null,
-            { response ->
-                parseData(response)
-                swipeRefreshLayout.isRefreshing = false  // Stop the refreshing indicator
-            },
-            { error ->
-                // Handle error
-                error.printStackTrace()
-                swipeRefreshLayout.isRefreshing = false  // Stop the refreshing indicator
+        loadFragment(CourseFragment())
+        bottomNav = findViewById(R.id.bottomNav) as BottomNavigationView
+        bottomNav.setOnItemSelectedListener {
+            when (it.itemId) {
+                R.id.kelas -> {
+                    loadFragment(CourseFragment())
+                    true
+                }
+                R.id.profile -> {
+                    loadFragment(ProfileFragment())
+                    true
+                }
+                R.id.settings -> {
+                    loadFragment(SettingsFragment())
+                    true
+                }
+                else -> false
             }
-        )
-
-        queue.add(jsonObjectRequest)
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    private fun parseData(response: JSONObject) {
-        val status = response.getString("status")
-        if (status == "success") {
-            kelasList.clear()
-            val dataArray = response.getJSONArray("data")
-            for (i in 0 until dataArray.length()) {
-                val item = dataArray.getJSONObject(i)
-                val kelas = Kelas(
-                    id = item.getString("id"),
-                    judul = item.getString("judul"),
-                    sub_judul = item.getString("sub_judul"),
-                    deskripsi = item.getString("deskripsi")
-                )
-                kelasList.add(kelas)
-            }
-            kelasAdapter.notifyDataSetChanged()
         }
     }
+
+    private  fun loadFragment(fragment: Fragment){
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.container,fragment)
+        transaction.commit()
+    }
+
+
 }
 
