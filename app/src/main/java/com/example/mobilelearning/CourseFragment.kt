@@ -1,6 +1,7 @@
 package com.example.mobilelearning
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.example.mobilelearning.siswa.DetailKelasSiswaActivity
 import org.json.JSONObject
 
 class CourseFragment : Fragment() {
@@ -33,6 +35,16 @@ class CourseFragment : Fragment() {
 
         kelasList = ArrayList()
         kelasAdapter = KelasAdapter(kelasList)
+
+        kelasAdapter.onItemClick = { kelas ->
+            val intent = Intent(context, DetailKelasSiswaActivity::class.java).apply {
+                putExtra("KELAS_ID", kelas.id)
+                putExtra("JUDUL", kelas.judul)
+                putExtra("DESKRIPSI", kelas.deskripsi)
+            }
+            startActivity(intent)
+        }
+
         recyclerView.adapter = kelasAdapter
 
         swipeRefreshLayout.setOnRefreshListener {
