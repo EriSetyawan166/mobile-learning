@@ -13,6 +13,7 @@
 
     <style name="Theme.MobileLearning.NoAppBar" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/orange</item>
+        <item name="colorSecondary">@color/grey</item>
         <item name="android:statusBarColor">@color/white</item>
         <item name="android:textViewStyle">@style/DefaultTextViewStyle</item>
         <item name="buttonStyle">@style/DefaultButtonStyle</item>

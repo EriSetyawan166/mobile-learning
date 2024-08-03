@@ -17,4 +17,6 @@
     <string name="deskripsi_mata_pelajaran">Deskripsi Mata Pelajaran</string>
     <string name="deskripsi">deskripsi</string>
     <string name="masuk_ke_mata_pelajaran">Masuk Ke Mata Pelajaran</string>
+    <string name="lihat_materi">Lihat Materi</string>
+    <string name="download_materi">Download Materi</string>
 </resources>

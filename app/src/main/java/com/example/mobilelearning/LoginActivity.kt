@@ -36,7 +36,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun login(){
-        val url = "http://192.168.100.121/mobile_learning_api/login.php"
+        val url = "${Config.BASE_URL}login.php"
         val username = editTextUsername.text.toString().trim()
         val password = editTextPassword.text.toString().trim()
 

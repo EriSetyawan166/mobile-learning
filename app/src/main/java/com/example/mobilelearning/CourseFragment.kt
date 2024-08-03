@@ -58,7 +58,7 @@ class CourseFragment : Fragment() {
 
     private fun fetchClasses() {
         val queue = Volley.newRequestQueue(requireContext())
-        val url = "http://192.168.100.121/mobile_learning_api/ambilKelas.php"
+        val url = "${Config.BASE_URL}ambilKelas.php"
 
         val jsonObjectRequest = JsonObjectRequest(
             Request.Method.GET, url, null,
