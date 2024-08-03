@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
@@ -38,6 +39,7 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     private val btnView: Button = itemView.findViewById(R.id.lihatMateriButton)
     private val btnDownload: Button = itemView.findViewById(R.id.DownloadMateriButton)
 
+
     fun bind(materi: Materi) {
         judulTextView.text = materi.judul
         deskripsiTextView.text = materi.deskripsi
@@ -48,21 +50,25 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         }
 
         btnDownload.setOnClickListener {
-            val file = File(itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.judul}.pdf")
-
-            val downloadUri = Uri.parse("${Config.BASE_URL}/${materi.file_path}")
-            val request = DownloadManager.Request(downloadUri)
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            request.setDestinationUri(Uri.fromFile(file))
-
-            val downloadManager = itemView.context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            downloadManager.enqueue(request)
-
-            Toast.makeText(itemView.context, "Downloading ${materi.judul}", Toast.LENGTH_SHORT).show()
+            downloadFile(materi)
         }
     }
 
-    fun handleViewOrDownload(materi: Materi) {
+    private fun downloadFile(materi: Materi) {
+        val file = File(itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.judul}.pdf")
+
+        val downloadUri = Uri.parse("${Config.BASE_URL}/${materi.file_path}")
+        val request = DownloadManager.Request(downloadUri)
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+        request.setDestinationUri(Uri.fromFile(file))
+
+        val downloadManager = itemView.context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        downloadManager.enqueue(request)
+
+        Toast.makeText(itemView.context, "Downloading ${materi.judul}", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun handleViewOrDownload(materi: Materi) {
         val context = itemView.context
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.judul}.pdf")
 
@@ -73,13 +79,14 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         }
     }
 
-    fun openPdfActivity(context: Context, filePath: String) {
-        val intent = Intent(context, PdfViewerActivity::class.java)
-        intent.putExtra("PDF_FILE_PATH", filePath)
+    private fun openPdfActivity(context: Context, filePath: String) {
+        val intent = Intent(context, PdfViewerActivity::class.java).apply {
+            putExtra("PDF_FILE_PATH", filePath)
+        }
         context.startActivity(intent)
     }
 
-    fun downloadAndOpenFile(context: Context, materi: Materi) {
+    private fun downloadAndOpenFile(context: Context, materi: Materi) {
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.judul}.pdf")
         val downloadUri = Uri.parse("${Config.BASE_URL}/${materi.file_path}")
         val request = DownloadManager.Request(downloadUri)
@@ -89,16 +96,23 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val downloadId = downloadManager.enqueue(request)
 
-        val onComplete = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                if (downloadId == intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)) {
-                    openPdfActivity(context!!, file.absolutePath)
+        Thread {
+            var downloading = true
+            while (downloading) {
+                val query = DownloadManager.Query().setFilterById(downloadId)
+                val cursor = downloadManager.query(query)
+                if (cursor.moveToFirst()) {
+                    val status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                        downloading = false
+                        openPdfActivity(context, file.absolutePath)
+                    }
                 }
+                cursor.close()
             }
-        }
-
-        context.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+        }.start()
     }
+
 }
 
 

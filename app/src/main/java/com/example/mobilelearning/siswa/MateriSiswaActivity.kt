@@ -11,6 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -25,6 +26,9 @@ import org.json.JSONException
 class MateriSiswaActivity : AppCompatActivity() {
 
     private lateinit var toolbar: Toolbar
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: MateriAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_materi_siswa)
@@ -35,17 +39,24 @@ class MateriSiswaActivity : AppCompatActivity() {
         val kelasId = intent.getStringExtra("KELAS_ID") ?: return
         val KelasJudul = intent.getStringExtra("JUDUL") ?: return
         findViewById<TextView>(R.id.toolbar_title).text = KelasJudul
+        recyclerView = findViewById(R.id.recyclerView)
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
         setupRecyclerView(kelasId)
+        swipeRefreshLayout.setOnRefreshListener {
+            fetchMateri(kelasId) { materiList ->
+                adapter.submitList(materiList)
+                swipeRefreshLayout.isRefreshing = false
+            }
+        }
     }
 
     private fun setupRecyclerView(kelasId: String) {
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        val adapter = MateriAdapter()
+        adapter = MateriAdapter()
         recyclerView.adapter = adapter
-
         fetchMateri(kelasId) { materiList ->
             adapter.submitList(materiList)
+            swipeRefreshLayout.isRefreshing = false
         }
     }
 
@@ -68,11 +79,10 @@ class MateriSiswaActivity : AppCompatActivity() {
                             val deskripsi = materiObject.getString("deskripsi")
                             val filePath = materiObject.getString("file_path")
                             val imageResId = when (i % 5) {
-                                0 -> R.drawable.gambar_1
-                                1 -> R.drawable.gambar_2
-                                2 -> R.drawable.gambar_3
-                                3 -> R.drawable.gambar_4
-                                else -> R.drawable.gambar_5
+                                0 -> R.drawable.gambar_materi_1
+                                1 -> R.drawable.gambar_materi_2
+                                2 -> R.drawable.gambar_materi_3
+                                else -> R.drawable.gambar_materi_4
                             }
                             materiList.add(Materi(id, judul, deskripsi, filePath, imageResId))
                         }

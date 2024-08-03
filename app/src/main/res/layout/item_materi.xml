@@ -7,6 +7,14 @@
     android:orientation="vertical"
     android:padding="8dp">
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
+        android:layout_marginBottom="8dp"/>
+
     <TextView
         android:id="@+id/judulTextView"
         android:layout_width="match_parent"
@@ -18,11 +26,6 @@
         android:id="@+id/deskripsiTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="match_parent"
-        android:layout_height="200dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
