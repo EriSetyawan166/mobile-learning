@@ -5,6 +5,7 @@
         <domain includeSubdomains="true">10.0.2.2</domain> <!-- For Android Emulator -->
         <domain includeSubdomains="true">192.168.100.121</domain> <!-- Example: Replace with your local network IP -->
         <domain includeSubdomains="true">192.168.134.10</domain>
+        <domain includeSubdomains="true">192.168.56.123</domain>
     </domain-config>
     <base-config cleartextTrafficPermitted="false">
         <!-- Default to not permitting cleartext; override as necessary per domain -->

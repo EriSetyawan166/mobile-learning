@@ -2,6 +2,7 @@ package com.example.mobilelearning
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -45,6 +46,9 @@ class LoginActivity : AppCompatActivity() {
                 val jsonResponse = JSONObject(response)
                 if (response.contains("success")) {
                     val role = jsonResponse.getString("role")
+                    val userId = jsonResponse.getString("user_id")
+                    val kelompok = jsonResponse.getString("kelompok")
+                    Log.d("LoginDebug", "User's kelompok: $kelompok")
                     val intent = when (role) {
                         "siswa" -> Intent(this, com.example.mobilelearning.siswa.HomeSiswaActivity::class.java)
                         "guru" -> Intent(this, com.example.mobilelearning.guru.HomeGuruActivity::class.java)
@@ -52,6 +56,9 @@ class LoginActivity : AppCompatActivity() {
                         else -> null
                     }
                     intent?.let {
+                        it.putExtra("user_id", userId)
+                        it.putExtra("role", role)
+                        it.putExtra("kelompok", kelompok)
                         startActivity(it)
                         finish()
                     }

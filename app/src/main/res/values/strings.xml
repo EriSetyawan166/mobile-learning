@@ -19,4 +19,17 @@
     <string name="masuk_ke_mata_pelajaran">Masuk Ke Mata Pelajaran</string>
     <string name="lihat_materi">Lihat Materi</string>
     <string name="download_materi">Download Materi</string>
+    <string name="logout">Logout</string>
+    <string name="Judul">Judul</string>
+    <string name="sub_judul">Sub Judul</string>
+    <string name="upload_pdf">Upload PDF</string>
+    <string name="kelas">Kelas</string>
+    <string name="upload_file">Upload file</string>
+    <string name="hapus_kelas">Hapus Kelas</string>
+    <string name="edit_kelas">Edit Kelas</string>
+    <string name="edit_materi">Edit Materi</string>
+    <string name="hapus_materi">Hapus Materi</string>
+    <string name="profil">Profil</string>
+    <string name="user_management">User Management</string>
+    <string name="user_manage">user manage</string>
 </resources>

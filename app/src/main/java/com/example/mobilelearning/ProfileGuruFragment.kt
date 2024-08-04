@@ -11,13 +11,13 @@ import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 
-class ProfileFragment : Fragment() {
+class ProfileGuruFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile, container, false)
+        return inflater.inflate(R.layout.fragment_profile_guru, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -47,5 +47,4 @@ class ProfileFragment : Fragment() {
             })
         Volley.newRequestQueue(context).add(jsonObjectRequest)
     }
-
 }

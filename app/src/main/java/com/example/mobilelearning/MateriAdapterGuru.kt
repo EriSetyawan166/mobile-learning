@@ -1,18 +1,17 @@
 package com.example.mobilelearning
 
 import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.ProgressBar
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
@@ -20,24 +19,34 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 
-class MateriAdapter : ListAdapter<Materi, MateriViewHolder>(MateriDiffCallback()) {
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MateriViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_materi, parent, false)
-        return MateriViewHolder(view)
+class MateriAdapterGuru : ListAdapter<Materi, MateriGuruViewHolder>(MateriGuruDiffCallback()) {
+
+    var onDeleteClick: ((Materi) -> Unit)? = null
+    var onEditClick: ((Materi) -> Unit)? = null
+
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MateriGuruViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_materi_guru, parent, false)
+        return MateriGuruViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: MateriViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: MateriGuruViewHolder, position: Int) {
         val materi = getItem(position)
+        holder.onDeleteClick = onDeleteClick
+        holder.onEditClick = onEditClick
         holder.bind(materi)
     }
 }
 
-class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+class MateriGuruViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    var onDeleteClick: ((Materi) -> Unit)? = null
+    var onEditClick: ((Materi) -> Unit)? = null
     private val judulTextView: TextView = itemView.findViewById(R.id.judulTextView)
     private val deskripsiTextView: TextView = itemView.findViewById(R.id.deskripsiTextView)
     private val imageView: ImageView = itemView.findViewById(R.id.imageView)
     private val btnView: Button = itemView.findViewById(R.id.lihatMateriButton)
     private val btnDownload: Button = itemView.findViewById(R.id.DownloadMateriButton)
+    private val menuMore: ImageView = itemView.findViewById(R.id.menu_more)
 
     fun bind(materi: Materi) {
         judulTextView.text = materi.judul
@@ -51,10 +60,33 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         btnDownload.setOnClickListener {
             downloadFile(materi)
         }
+
+        menuMore.setOnClickListener {
+            showPopupMenu(it, materi)
+        }
+    }
+
+    private fun showPopupMenu(view: View, materi: Materi) {
+        val popup = PopupMenu(view.context, view)
+        popup.inflate(R.menu.menu_option_materi)
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_edit -> {
+                    onEditClick?.invoke(materi)
+                    true
+                }
+                R.id.action_delete -> {
+                    onDeleteClick?.invoke(materi)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
     }
 
     private fun downloadFile(materi: Materi) {
-        val file = File(itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.judul}.pdf")
+        val file = File(itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.file_path}.pdf")
 
         val downloadUri = Uri.parse("${Config.BASE_URL}/${materi.file_path}")
         val request = DownloadManager.Request(downloadUri)
@@ -69,7 +101,7 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private fun handleViewOrDownload(materi: Materi) {
         val context = itemView.context
-        val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.judul}.pdf")
+        val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.file_path}.pdf")
 
         if (file.exists()) {
             openPdfActivity(context, file.absolutePath)
@@ -79,6 +111,7 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     }
 
     private fun openPdfActivity(context: Context, filePath: String) {
+        Log.d("PDFViewerDebug", "Opening PDF at path: $filePath")
         val intent = Intent(context, PdfViewerActivity::class.java).apply {
             putExtra("PDF_FILE_PATH", filePath)
         }
@@ -87,7 +120,14 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private fun downloadAndOpenFile(context: Context, materi: Materi) {
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "${materi.judul}.pdf")
+
+        // Delete the file if it exists to ensure the latest version is downloaded
+        if (file.exists()) {
+            file.delete()
+        }
+
         val downloadUri = Uri.parse("${Config.BASE_URL}/${materi.file_path}")
+        Log.d("DownloadDebug", "Download URI: $downloadUri")
         val request = DownloadManager.Request(downloadUri)
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         request.setDestinationUri(Uri.fromFile(file))
@@ -112,11 +152,12 @@ class MateriViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         }.start()
     }
 
+
 }
 
 
-class MateriDiffCallback : DiffUtil.ItemCallback<Materi>() {
+
+class MateriGuruDiffCallback : DiffUtil.ItemCallback<Materi>() {
     override fun areItemsTheSame(oldItem: Materi, newItem: Materi): Boolean = oldItem.id == newItem.id
     override fun areContentsTheSame(oldItem: Materi, newItem: Materi): Boolean = oldItem == newItem
 }
-

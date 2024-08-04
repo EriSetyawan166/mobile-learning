@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -17,6 +16,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MobileLearning.NoAppBar"
         tools:targetApi="31">
+        <activity
+            android:name=".admin.MateriAdminActivity"
+            android:exported="false" />
+        <activity
+            android:name=".admin.DetailKelasAdminActivity"
+            android:exported="false" />
+        <activity
+            android:name=".guru.MateriGuruActivity"
+            android:exported="false" />
+        <activity
+            android:name=".guru.DetailKelasGuruActivity"
+            android:exported="false" />
         <activity
             android:name=".PdfViewerActivity"
             android:exported="false" />

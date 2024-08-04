@@ -77,7 +77,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="NIS"
+            android:hint="NIP"
             app:boxStrokeColor="@color/black"
             app:boxStrokeErrorColor="@color/error_color"
             app:hintTextColor="@color/black">

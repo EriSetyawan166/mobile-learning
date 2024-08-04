@@ -39,5 +39,10 @@ class KelasAdapter(private val kelasList: MutableList<Kelas>) : RecyclerView.Ada
         }
     }
 
+    fun addClass(newClass: Kelas) {
+        kelasList.add(newClass)
+        notifyItemInserted(kelasList.size - 1)
+    }
+
 
 }

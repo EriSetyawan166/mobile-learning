@@ -6,9 +6,9 @@
         android:title="@string/courses" />
 
     <item
-        android:id="@+id/profile"
-        android:icon="@drawable/baseline_person_2_24"
-        android:title="@string/profile" />
+        android:id="@+id/user_manage"
+        android:icon="@drawable/baseline_manage_accounts_24"
+        android:title="@string/user_manage" />
 
     <item
         android:id="@+id/logout"
