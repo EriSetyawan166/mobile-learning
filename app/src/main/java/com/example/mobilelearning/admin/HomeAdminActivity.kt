@@ -61,7 +61,7 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
                 putString("role", role)
                 putString("user_id", user_id)
             }
-        }, "Kelas Anda")
+        }, "Kelas")
         bottomNav = findViewById(R.id.bottomNav) as BottomNavigationView
         bottomNav.setOnItemSelectedListener {
             when (it.itemId) {

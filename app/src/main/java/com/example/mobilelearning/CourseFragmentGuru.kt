@@ -50,7 +50,7 @@ class CourseFragmentGuru : Fragment() {
         kelasAdapter = KelasAdapter(kelasList)
 
         kelasAdapter.onItemClick = { kelas ->
-            val intent = Intent(context, DetailKelasSiswaActivity::class.java).apply {
+            val intent = Intent(context, DetailKelasGuruActivity::class.java).apply {
                 putExtra("KELAS_ID", kelas.id)
                 putExtra("JUDUL", kelas.judul)
                 putExtra("DESKRIPSI", kelas.deskripsi)

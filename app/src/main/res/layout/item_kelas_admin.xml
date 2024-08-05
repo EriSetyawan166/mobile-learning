@@ -37,11 +37,21 @@
             android:paddingEnd="18dp"/>
 
         <TextView
+            android:id="@+id/kelompok_kelas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:layout_below="@id/title_kelas"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"/>
+
+
+        <TextView
             android:id="@+id/subtitle_kelas"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:layout_below="@id/title_kelas"
+            android:layout_below="@id/kelompok_kelas"
             android:paddingStart="18dp"
             android:paddingEnd="18dp"
             android:paddingBottom="10dp"/>

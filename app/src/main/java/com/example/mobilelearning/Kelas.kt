@@ -5,6 +5,6 @@ data class Kelas(
     val judul: String,
     val sub_judul: String,
     val deskripsi: String,
-    val kelompok: String
+    val kelompok: String,
 )
 

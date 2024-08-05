@@ -50,7 +50,7 @@ class CourseFragmentAdmin : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         kelasList = ArrayList()
-        kelasAdapter = KelasAdapterAdmin(kelasList)
+        kelasAdapter = KelasAdapterAdmin(kelasList, requireContext())
 
         kelasAdapter.onItemClick = { kelas ->
             val intent = Intent(context, DetailKelasAdminActivity::class.java).apply {
