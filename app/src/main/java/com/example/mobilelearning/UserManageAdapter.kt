@@ -10,10 +10,10 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 
-class UserManageAdapter(private val onDelete: (User) -> Unit) : RecyclerView.Adapter<UserManageAdapter.UserViewHolder>() {
+class UserManageAdapter(private val onDelete: (User) -> Unit, private val onEdit: (User) -> Unit) : RecyclerView.Adapter<UserManageAdapter.UserViewHolder>() {
     private var users: List<User> = listOf()
 
-    class UserViewHolder(view: View, val onDelete: (User) -> Unit, val getUser: (Int) -> User) : RecyclerView.ViewHolder(view) {
+    class UserViewHolder(view: View, val onDelete: (User) -> Unit, val onEdit: (User) -> Unit, val getUser: (Int) -> User) : RecyclerView.ViewHolder(view) {
         private val nameTextView: TextView = view.findViewById(R.id.textViewName)
         private val optionsButton: ImageView = view.findViewById(R.id.button_option)
 
@@ -32,6 +32,13 @@ class UserManageAdapter(private val onDelete: (User) -> Unit) : RecyclerView.Ada
                             val user = getUser(adapterPosition)
                             if (adapterPosition != RecyclerView.NO_POSITION) {
                                 showDeleteConfirmation(user)
+                            }
+                            true
+                        }
+                        R.id.option_edit -> {
+                            val user = getUser(adapterPosition)
+                            if (adapterPosition != RecyclerView.NO_POSITION) {
+                                onEdit(user)
                             }
                             true
                         }
@@ -61,7 +68,7 @@ class UserManageAdapter(private val onDelete: (User) -> Unit) : RecyclerView.Ada
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_user, parent, false)
-        return UserViewHolder(view, onDelete, { position -> users[position] })
+        return UserViewHolder(view, onDelete, onEdit, { position -> users[position] })
     }
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
