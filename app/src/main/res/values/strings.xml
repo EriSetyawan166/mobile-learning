@@ -34,4 +34,8 @@
     <string name="user_manage">Manage User</string>
     <string name="edit">Edit</string>
     <string name="hapus">Hapus</string>
+    <string name="nama_kelompok">Nama Kelompok</string>
+    <string name="konfirmasi_password">Konfirmasi Password</string>
+    <string name="kelompok">Kelompok</string>
+    <string name="file_belum_dipilih">File Belum Dipilih</string>
 </resources>

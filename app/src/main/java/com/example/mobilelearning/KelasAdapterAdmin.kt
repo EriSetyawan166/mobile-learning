@@ -16,7 +16,7 @@ class KelasAdapterAdmin(private val kelasList: MutableList<Kelas>) : RecyclerVie
     private val gambarKelas = arrayOf(R.drawable.gambar_1, R.drawable.gambar_2, R.drawable.gambar_3, R.drawable.gambar_4, R.drawable.gambar_5, R.drawable.gambar_6)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): KelasViewHolder {
-        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.item_kelas_guru, parent, false)
+        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.item_kelas_admin, parent, false)
         return KelasViewHolder(itemView, onItemClick, onDeleteClick, onEditClick)
     }
 

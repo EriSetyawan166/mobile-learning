@@ -32,7 +32,7 @@ class DetailKelasAdminActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.deskripsiTextView).text = deskripsi
 
         findViewById<Button>(R.id.masukKeMataPelajaranButton).setOnClickListener {
-            val intent = Intent(this, MateriGuruActivity::class.java)
+            val intent = Intent(this, MateriAdminActivity::class.java)
             intent.putExtra("KELAS_ID", kelas_id)
             intent.putExtra("JUDUL", judul)
             startActivity(intent)

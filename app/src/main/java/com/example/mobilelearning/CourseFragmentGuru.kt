@@ -29,39 +29,33 @@ class CourseFragmentGuru : Fragment() {
 
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recyclerView: RecyclerView
-    private lateinit var kelasAdapter: KelasAdapterGuru
+    private lateinit var kelasAdapter: KelasAdapter
     private lateinit var kelasList: ArrayList<Kelas>
     private lateinit var kelompok: String
-    var listener: OnClassAddedListener? = null
+    private lateinit var role: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_course_guru, container, false)
-        kelompok = arguments?.getString("kelompok") ?: "DefaultGroup"
+        val view = inflater.inflate(R.layout.fragment_course, container, false)
+        kelompok = arguments?.getString("kelompok") ?: ""
+        role  = arguments?.getString("role") ?: ""
+
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         kelasList = ArrayList()
-        kelasAdapter = KelasAdapterGuru(kelasList)
+        kelasAdapter = KelasAdapter(kelasList)
 
         kelasAdapter.onItemClick = { kelas ->
-            val intent = Intent(context, DetailKelasGuruActivity::class.java).apply {
+            val intent = Intent(context, DetailKelasSiswaActivity::class.java).apply {
                 putExtra("KELAS_ID", kelas.id)
                 putExtra("JUDUL", kelas.judul)
                 putExtra("DESKRIPSI", kelas.deskripsi)
             }
             startActivity(intent)
-        }
-
-        kelasAdapter.onDeleteClick = { kelas ->
-            showDeleteConfirmationDialog(kelas)
-        }
-
-        kelasAdapter.onEditClick = { kelas ->
-            showEditClassDialog(kelas)
         }
 
         recyclerView.adapter = kelasAdapter
@@ -95,6 +89,7 @@ class CourseFragmentGuru : Fragment() {
         queue.add(jsonObjectRequest)
     }
 
+
     @SuppressLint("NotifyDataSetChanged")
     private fun parseData(response: JSONObject) {
         val status = response.getString("status")
@@ -113,147 +108,6 @@ class CourseFragmentGuru : Fragment() {
             }
             kelasAdapter.notifyDataSetChanged()
         }
-    }
-
-    private fun showDeleteConfirmationDialog(kelas: Kelas) {
-        AlertDialog.Builder(requireContext()).apply {
-            setTitle("Konfirmasi Hapus Kelas")
-            setMessage("Apakah Anda yakin ingin menghapus kelas ini?")
-            setPositiveButton("Ya") { dialog, which ->
-                deleteClass(kelas)
-            }
-            setNegativeButton("Batal") { dialog, which ->
-                dialog.dismiss()
-            }
-        }.create().show()
-    }
-
-    private fun deleteClass(kelas: Kelas) {
-        val requestQueue = Volley.newRequestQueue(requireContext())
-        val url = "${Config.BASE_URL}hapusKelas.php"
-
-        val params = HashMap<String, String>()
-        params["id"] = kelas.id
-
-        val stringRequest = object : StringRequest(
-            Request.Method.POST, url,
-            Response.Listener<String> { response ->
-                try {
-                    val jsonResponse = JSONObject(response)
-                    if (jsonResponse.getString("status") == "success") {
-                        kelasAdapter.removeClass(kelas)
-                        Toast.makeText(requireContext(), "Kelas berhasil dihapus!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(requireContext(), jsonResponse.getString("message"), Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: JSONException) {
-                    Toast.makeText(requireContext(), "Error parsing JSON: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            },
-            Response.ErrorListener { error ->
-                Toast.makeText(requireContext(), "Gagal menghapus kelas: ${error.message}", Toast.LENGTH_SHORT).show()
-            }
-        ) {
-            override fun getParams(): Map<String, String> {
-                return params
-            }
-        }
-
-        requestQueue.add(stringRequest)
-    }
-
-    private fun showEditClassDialog(kelas: Kelas) {
-        val layoutInflater = LayoutInflater.from(requireContext())
-        val view = layoutInflater.inflate(R.layout.dialog_add_class, null)
-
-        val judulInput = view.findViewById<TextInputLayout>(R.id.input_judul)
-        val subJudulInput = view.findViewById<TextInputLayout>(R.id.input_sub_judul)
-        val deskripsiInput = view.findViewById<TextInputLayout>(R.id.input_deskripsi)
-
-        // Mengisi field dengan data kelas yang akan diedit
-        judulInput.editText?.setText(kelas.judul)
-        subJudulInput.editText?.setText(kelas.sub_judul)
-        deskripsiInput.editText?.setText(kelas.deskripsi)
-
-        AlertDialog.Builder(requireContext()).apply {
-            setView(view)
-            setCancelable(true)
-            setPositiveButton("Simpan") { dialog, id ->
-                updateClass(kelas.id, judulInput.editText?.text.toString(), subJudulInput.editText?.text.toString(), deskripsiInput.editText?.text.toString())
-            }
-            setNegativeButton("Batal") { dialog, id ->
-                dialog.cancel()
-            }
-        }.create().show()
-    }
-
-    private fun updateClass(id: String, judul: String, subJudul: String, deskripsi: String) {
-        Log.d("updateClass", "Updating class with id: $id, judul: $judul, sub_judul: $subJudul, deskripsi: $deskripsi")
-
-        val requestQueue = Volley.newRequestQueue(requireContext())
-        val url = "${Config.BASE_URL}/editKelas.php"
-
-        val params = HashMap<String, String>()
-        params["id"] = id
-        params["judul"] = judul
-        params["sub_judul"] = subJudul
-        params["deskripsi"] = deskripsi
-
-        val stringRequest = object : StringRequest(
-            Request.Method.POST, url,
-            Response.Listener<String> { response ->
-                try {
-                    val jsonResponse = JSONObject(response)
-                    if (jsonResponse.getString("status") == "success") {
-                        val updatedKelas = Kelas(id, judul, subJudul, deskripsi)
-                        kelasAdapter.updateClass(updatedKelas)
-                        listener?.onClassUpdated(updatedKelas)
-                        Toast.makeText(requireContext(), "Kelas berhasil diupdate!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(requireContext(), jsonResponse.getString("message"), Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: JSONException) {
-                    Toast.makeText(requireContext(), "Error parsing JSON: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            },
-            Response.ErrorListener { error ->
-                Log.e("updateClass", "Error response: ${error.message}")
-                Toast.makeText(requireContext(), "Gagal mengupdate kelas: ${error.message}", Toast.LENGTH_SHORT).show()
-            }
-        ) {
-            override fun getParams(): Map<String, String> {
-                return params
-            }
-        }
-
-        requestQueue.add(stringRequest)
-    }
-
-
-
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is OnClassAddedListener) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement OnClassAddedListener")
-        }
-    }
-
-    interface OnClassAddedListener {
-        fun onClassAdded(newClass: Kelas)
-        fun onClassUpdated(updatedClass: Kelas)
-    }
-
-
-    fun addClassToAdapter(newClass: Kelas) {
-        kelasList.add(newClass)
-        kelasAdapter.notifyDataSetChanged() // Or use more specific notifications
-    }
-
-    fun updateClassInAdapter(updatedClass: Kelas) {
-        kelasAdapter.updateClass(updatedClass)
     }
 
 }

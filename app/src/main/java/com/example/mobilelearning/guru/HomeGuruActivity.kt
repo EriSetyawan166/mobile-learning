@@ -24,6 +24,7 @@ import com.google.android.material.textfield.TextInputLayout
 import org.json.JSONObject
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.mobilelearning.Config
 import com.android.volley.Request
 import com.android.volley.Response
@@ -35,19 +36,25 @@ import com.example.mobilelearning.ProfileGuruFragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import org.json.JSONException
 
-class HomeGuruActivity : AppCompatActivity(), CourseFragmentGuru.OnClassAddedListener {
+class HomeGuruActivity : AppCompatActivity() {
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var kelasAdapter: KelasAdapter
+    private lateinit var kelasList: ArrayList<Kelas>
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var toolbar: Toolbar
     private lateinit var kelompok: String
     private lateinit var role: String
     private lateinit var user_id: String
-    private lateinit var toolbar: Toolbar
     lateinit var bottomNav : BottomNavigationView
-    lateinit var recyclerView: RecyclerView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home_guru)
-        kelompok = intent.getStringExtra("kelompok") ?: "DefaultGroup"
+        kelompok = intent.getStringExtra("kelompok") ?: ""
         role = intent.getStringExtra("role") ?: ""
         user_id = intent.getStringExtra("user_id") ?: ""
+        Log.d("HomeSiswaDebug", "Received role: $role")
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
@@ -72,7 +79,7 @@ class HomeGuruActivity : AppCompatActivity(), CourseFragmentGuru.OnClassAddedLis
                     true
                 }
                 R.id.profile -> {
-                    loadFragment(ProfileGuruFragment().apply {
+                    loadFragment(ProfileFragment().apply {
                         arguments = Bundle().apply {
                             putString("kelompok", kelompok)
                             putString("role", role)
@@ -87,11 +94,6 @@ class HomeGuruActivity : AppCompatActivity(), CourseFragmentGuru.OnClassAddedLis
                 }
                 else -> false
             }
-        }
-
-        val fab: FloatingActionButton = findViewById(R.id.fab_add_class)
-        fab.setOnClickListener {
-            showAddClassDialog()
         }
     }
 
@@ -113,98 +115,22 @@ class HomeGuruActivity : AppCompatActivity(), CourseFragmentGuru.OnClassAddedLis
         }
     }
 
-
-
-    private fun showAddClassDialog() {
-        val layoutInflater = LayoutInflater.from(this)
-        val view = layoutInflater.inflate(R.layout.dialog_add_class, null)
-
-        val judulInput = view.findViewById<TextInputLayout>(R.id.input_judul)
-        val subJudulInput = view.findViewById<TextInputLayout>(R.id.input_sub_judul)
-        val deskripsiInput = view.findViewById<TextInputLayout>(R.id.input_deskripsi)
-
-        AlertDialog.Builder(this).apply {
-            setView(view)
-            setCancelable(true)
-            setPositiveButton("Tambah", DialogInterface.OnClickListener { dialog, id ->
-                submitClass(
-                    judulInput.editText?.text.toString(),
-                    subJudulInput.editText?.text.toString(),
-                    deskripsiInput.editText?.text.toString()
-                )
-            })
-            setNegativeButton("Batal", DialogInterface.OnClickListener { dialog, id ->
-                dialog.cancel()
-            })
-        }.create().show()
-    }
-
-    private fun submitClass(judul: String, subJudul: String, deskripsi: String) {
-        val requestQueue = Volley.newRequestQueue(this)
-        val url = "${Config.BASE_URL}/tambahKelas.php"
-
-        val params = HashMap<String, String>()
-        params["judul"] = judul
-        params["sub_judul"] = subJudul
-        params["deskripsi"] = deskripsi
-
-        val stringRequest = object : StringRequest(
-            Method.POST, url,
-            Response.Listener<String> { response ->
-                try {
-                    val jsonResponse = JSONObject(response)
-                    if (jsonResponse.getString("status") == "success") {
-                        val kelasId = jsonResponse.getString("id")
-                        val newKelas = Kelas(kelasId, judul, subJudul, deskripsi)
-                        onClassAdded(newKelas)  // Memanggil interface method
-                        Toast.makeText(this, "Kelas berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, jsonResponse.getString("message"), Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: JSONException) {
-                    Toast.makeText(this, "Error parsing JSON: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            },
-            Response.ErrorListener { error ->
-                Toast.makeText(this, "Gagal menambahkan kelas: ${error.message}", Toast.LENGTH_SHORT).show()
-            }
-        ) {
-            override fun getParams(): Map<String, String> {
-                return params
-            }
-        }
-
-        requestQueue.add(stringRequest)
-    }
-
-
     private fun loadFragment(fragment: Fragment, title: String){
         setToolbarTitle(title)
         val transaction = supportFragmentManager.beginTransaction()
         transaction.replace(R.id.container, fragment)
         transaction.commit()
-
-        val fab: FloatingActionButton = findViewById(R.id.fab_add_class)
-        if (fragment is CourseFragmentGuru) {
-            fab.show()
-        } else {
-            fab.hide()
-        }
     }
 
-    override fun onClassAdded(newClass: Kelas) {
-        val fragment = supportFragmentManager.findFragmentById(R.id.container) as? CourseFragmentGuru
-        fragment?.addClassToAdapter(newClass)
-    }
-
-    override fun onClassUpdated(updatedClass: Kelas) {
-        val fragment = supportFragmentManager.findFragmentById(R.id.container) as? CourseFragmentGuru
-        fragment?.updateClassInAdapter(updatedClass)
-    }
 
     private fun setToolbarTitle(title: String) {
         val toolbarTitle = findViewById<TextView>(R.id.toolbar_title)
         toolbarTitle.text = title
     }
 
+
+
+
+
 }
+

@@ -11,28 +11,38 @@
         android:id="@+id/toggleButtonGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:singleSelection="true">
+        app:singleSelection="true"
+        android:padding="4dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonSiswa"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Siswa"/>
+            android:text="Siswa"
+            android:textColor="@color/button_text_color"
+            app:backgroundTint="@color/button_background"
+            />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonGuru"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Guru"/>
+            android:text="Guru"
+            android:textColor="@color/button_text_color"
+            app:backgroundTint="@color/button_background"
+            />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonKelompok"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Kelompok"/>
+            android:text="Kelompok"
+            android:textColor="@color/button_text_color"
+            app:backgroundTint="@color/button_background"
+            />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <androidx.recyclerview.widget.RecyclerView

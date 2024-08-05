@@ -173,17 +173,53 @@ class CourseFragmentAdmin : Fragment() {
         subJudulInput.editText?.setText(kelas.sub_judul)
         deskripsiInput.editText?.setText(kelas.deskripsi)
 
-        AlertDialog.Builder(requireContext()).apply {
-            setView(view)
-            setCancelable(true)
-            setPositiveButton("Simpan") { dialog, id ->
-                updateClass(kelas.id, judulInput.editText?.text.toString(), subJudulInput.editText?.text.toString(), deskripsiInput.editText?.text.toString())
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(view)
+            .setPositiveButton("Simpan", null)
+            .setNegativeButton("Batal", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.setOnClickListener {
+                val judul = judulInput.editText?.text.toString()
+                val subJudul = subJudulInput.editText?.text.toString()
+                val deskripsi = deskripsiInput.editText?.text.toString()
+
+                // Clear previous errors
+                judulInput.error = null
+                subJudulInput.error = null
+                deskripsiInput.error = null
+
+                // Validate inputs
+                var isValid = true
+
+                if (judul.isEmpty()) {
+                    judulInput.error = "Judul tidak boleh kosong"
+                    isValid = false
+                }
+                if (subJudul.isEmpty()) {
+                    subJudulInput.error = "Sub judul tidak boleh kosong"
+                    isValid = false
+                }
+                if (deskripsi.isEmpty()) {
+                    deskripsiInput.error = "Deskripsi tidak boleh kosong"
+                    isValid = false
+                }
+
+                if (isValid) {
+                    // Log input values
+                    Log.d("EditClassDialog", "Judul: $judul, Sub Judul: $subJudul, Deskripsi: $deskripsi")
+                    // Update class if validation passes
+                    updateClass(kelas.id, judul, subJudul, deskripsi)
+                    dialog.dismiss()
+                }
             }
-            setNegativeButton("Batal") { dialog, id ->
-                dialog.cancel()
-            }
-        }.create().show()
+        }
+
+        dialog.show()
     }
+
 
     private fun updateClass(id: String, judul: String, subJudul: String, deskripsi: String) {
         Log.d("updateClass", "Updating class with id: $id, judul: $judul, sub_judul: $subJudul, deskripsi: $deskripsi")
@@ -226,6 +262,7 @@ class CourseFragmentAdmin : Fragment() {
 
         requestQueue.add(stringRequest)
     }
+
 
 
 

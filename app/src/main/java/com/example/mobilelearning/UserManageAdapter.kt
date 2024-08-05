@@ -1,5 +1,6 @@
 package com.example.mobilelearning
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,10 +11,21 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 
-class UserManageAdapter(private val onDelete: (User) -> Unit, private val onEdit: (User) -> Unit) : RecyclerView.Adapter<UserManageAdapter.UserViewHolder>() {
+class UserManageAdapter(
+    private val onDelete: (User) -> Unit,
+    private val onEdit: (User) -> Unit,
+    private var isGroupView: Boolean // Menambahkan parameter untuk menentukan apakah tampilan ini adalah untuk kelompok
+) : RecyclerView.Adapter<UserManageAdapter.UserViewHolder>() {
+
     private var users: List<User> = listOf()
 
-    class UserViewHolder(view: View, val onDelete: (User) -> Unit, val onEdit: (User) -> Unit, val getUser: (Int) -> User) : RecyclerView.ViewHolder(view) {
+    class UserViewHolder(
+        view: View,
+        private val onDelete: (User) -> Unit,
+        private val onEdit: (User) -> Unit,
+        private val isGroupView: Boolean,
+        private val getUser: (Int) -> User // Menambahkan lambda untuk mendapatkan user dari adapter
+    ) : RecyclerView.ViewHolder(view) {
         private val nameTextView: TextView = view.findViewById(R.id.textViewName)
         private val optionsButton: ImageView = view.findViewById(R.id.button_option)
 
@@ -27,19 +39,16 @@ class UserManageAdapter(private val onDelete: (User) -> Unit, private val onEdit
             PopupMenu(itemView.context, optionsButton).apply {
                 menuInflater.inflate(R.menu.menu_option_user, this.menu)
                 setOnMenuItemClickListener { menuItem ->
+                    val user = adapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { getUser(it) }
                     when (menuItem.itemId) {
                         R.id.option_delete -> {
-                            val user = getUser(adapterPosition)
-                            if (adapterPosition != RecyclerView.NO_POSITION) {
-                                showDeleteConfirmation(user)
-                            }
+                            Log.d("OptionsPopup", "Delete option selected for ${if (isGroupView) "group" else "user"}: ${user?.name}")
+                            user?.let { showDeleteConfirmation(it) }
                             true
                         }
                         R.id.option_edit -> {
-                            val user = getUser(adapterPosition)
-                            if (adapterPosition != RecyclerView.NO_POSITION) {
-                                onEdit(user)
-                            }
+                            Log.d("OptionsPopup", "Edit option selected for ${if (isGroupView) "group" else "user"}: ${user?.name}")
+                            user?.let { onEdit(it) }
                             true
                         }
                         else -> false
@@ -52,7 +61,7 @@ class UserManageAdapter(private val onDelete: (User) -> Unit, private val onEdit
         private fun showDeleteConfirmation(user: User) {
             AlertDialog.Builder(itemView.context)
                 .setTitle("Confirm Delete")
-                .setMessage("Are you sure you want to delete this user?")
+                .setMessage("Are you sure you want to delete this ${if (isGroupView) "group" else "user"}?")
                 .setPositiveButton("Delete") { dialog, _ ->
                     onDelete(user)
                     dialog.dismiss()
@@ -68,20 +77,24 @@ class UserManageAdapter(private val onDelete: (User) -> Unit, private val onEdit
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_user, parent, false)
-        return UserViewHolder(view, onDelete, onEdit, { position -> users[position] })
+        return UserViewHolder(view, onDelete, onEdit, isGroupView) { position -> users[position] }
     }
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
+        Log.d("onBindViewHolder", "Binding ${if (isGroupView) "group" else "user"} at position $position: ${users[position].name}")
         holder.bind(users[position])
     }
 
     override fun getItemCount() = users.size
 
-    fun updateData(newUsers: List<User>) {
+    fun updateData(newUsers: List<User>, isGroupView: Boolean) {
         users = newUsers
+        this.isGroupView = isGroupView
+        Log.d("UserManageAdapter", "Updating data. isGroupView: $isGroupView, Data: ${users.map { it.name }}")
         notifyDataSetChanged()
     }
 }
+
 
 
 

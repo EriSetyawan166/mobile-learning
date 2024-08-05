@@ -54,4 +54,12 @@
         app:iconGravity="textStart"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
+    <TextView
+        android:id="@+id/file_name_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/file_belum_dipilih"
+        android:paddingTop="8dp"
+        android:textColor="@android:color/black"/>
+
 </LinearLayout>

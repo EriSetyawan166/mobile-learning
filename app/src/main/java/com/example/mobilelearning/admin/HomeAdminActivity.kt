@@ -121,21 +121,53 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
         val subJudulInput = view.findViewById<TextInputLayout>(R.id.input_sub_judul)
         val deskripsiInput = view.findViewById<TextInputLayout>(R.id.input_deskripsi)
 
-        AlertDialog.Builder(this).apply {
-            setView(view)
-            setCancelable(true)
-            setPositiveButton("Tambah", DialogInterface.OnClickListener { dialog, id ->
-                submitClass(
-                    judulInput.editText?.text.toString(),
-                    subJudulInput.editText?.text.toString(),
-                    deskripsiInput.editText?.text.toString()
-                )
-            })
-            setNegativeButton("Batal", DialogInterface.OnClickListener { dialog, id ->
-                dialog.cancel()
-            })
-        }.create().show()
+        val dialog = AlertDialog.Builder(this)
+            .setView(view)
+            .setPositiveButton("Tambah", null)
+            .setNegativeButton("Batal", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val addButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            addButton.setOnClickListener {
+                val judul = judulInput.editText?.text.toString()
+                val subJudul = subJudulInput.editText?.text.toString()
+                val deskripsi = deskripsiInput.editText?.text.toString()
+
+                // Clear previous errors
+                judulInput.error = null
+                subJudulInput.error = null
+                deskripsiInput.error = null
+
+                // Validate inputs
+                var isValid = true
+
+                if (judul.isEmpty()) {
+                    judulInput.error = "Judul tidak boleh kosong"
+                    isValid = false
+                }
+                if (subJudul.isEmpty()) {
+                    subJudulInput.error = "Sub judul tidak boleh kosong"
+                    isValid = false
+                }
+                if (deskripsi.isEmpty()) {
+                    deskripsiInput.error = "Deskripsi tidak boleh kosong"
+                    isValid = false
+                }
+
+                if (isValid) {
+                    // Log input values
+                    Log.d("AddClassDialog", "Judul: $judul, Sub Judul: $subJudul, Deskripsi: $deskripsi")
+                    // Add class if validation passes
+                    submitClass(judul, subJudul, deskripsi)
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        dialog.show()
     }
+
 
     private fun submitClass(judul: String, subJudul: String, deskripsi: String) {
         val requestQueue = Volley.newRequestQueue(this)
@@ -199,14 +231,13 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
 
     private fun showAddUserOrGroupDialog() {
         // This dialog asks whether to add a student, teacher, or group
-        val options = arrayOf("Add Student", "Add Teacher", "Add Group")
+        val options = arrayOf("Tambah User", "Tambah Kelompok")
         AlertDialog.Builder(this)
-            .setTitle("Select Type")
+            .setTitle("Pilih Tipe")
             .setItems(options) { dialog, which ->
                 when (which) {
-                    0 -> showAddUserDialog()  // Siswa means student
-                    1 -> showAddUserDialog()   // Guru means teacher
-                    2 -> showAddGroupDialog()        // Handle group addition
+                    0 -> showAddUserDialog()
+                    1 -> showAddGroupDialog()
                 }
             }.show()
     }
@@ -243,9 +274,15 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
             }
         }
 
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setView(view)
-            .setPositiveButton("Add") { dialog, _ ->
+            .setPositiveButton("Tambah", null)
+            .setNegativeButton("Batal", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val addButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            addButton.setOnClickListener {
                 val username = usernameInput.editText?.text.toString()
                 val password = passwordInput.editText?.text.toString()
                 val confirmPassword = passwordConfirmInput.editText?.text.toString()
@@ -254,18 +291,65 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
                 val nipNis = nipNisInput.editText?.text.toString()
                 val group = selectedGroupId ?: ""
 
-                // Log input values
-                Log.d("AddUserDialog", "Username: $username, Password: $password, Role: $role, Full Name: $fullName, NIP/NIS: $nipNis, Group: $group")
+                // Clear previous errors
+                usernameInput.error = null
+                passwordInput.error = null
+                passwordConfirmInput.error = null
+                nameInput.error = null
+                nipNisInput.error = null
+                roleDropdown.error = null
+                groupDropdown.error = null
 
-                if (password == confirmPassword) {
+                // Validate inputs
+                var isValid = true
+
+                if (username.isEmpty()) {
+                    usernameInput.error = "Username tidak boleh kosong"
+                    isValid = false
+                }
+                if (password.isEmpty()) {
+                    passwordInput.error = "Password tidak boleh kosong"
+                    isValid = false
+                }
+                if (confirmPassword.isEmpty()) {
+                    passwordConfirmInput.error = "Konfirmasi password tidak boleh kosong"
+                    isValid = false
+                }
+                if (role.isEmpty()) {
+                    roleDropdown.error = "Role tidak boleh kosong"
+                    isValid = false
+                }
+                if (fullName.isEmpty()) {
+                    nameInput.error = "Nama lengkap tidak boleh kosong"
+                    isValid = false
+                }
+                if (nipNis.isEmpty()) {
+                    nipNisInput.error = "NIP/NIS tidak boleh kosong"
+                    isValid = false
+                }
+                if (group.isEmpty()) {
+                    groupDropdown.error = "Kelompok tidak boleh kosong"
+                    isValid = false
+                }
+                if (password != confirmPassword) {
+                    passwordConfirmInput.error = "Password tidak sama"
+                    isValid = false
+                }
+
+                if (isValid) {
+                    // Log input values
+                    Log.d("AddUserDialog", "Username: $username, Password: $password, Role: $role, Full Name: $fullName, NIP/NIS: $nipNis, Group: $group")
+                    // Add user if validation passes
                     addUser(username, password, role, fullName, nipNis, group)
-                } else {
-                    Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
                 }
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        dialog.show()
     }
+
+
 
 
     private fun fetchGroups(callback: (List<Group>) -> Unit) {
@@ -357,20 +441,80 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
 
     private fun showAddGroupDialog() {
         val layoutInflater = LayoutInflater.from(this)
-        val view = layoutInflater.inflate(R.layout.dialog_add_group, null) // You need to create this layout
+        val view = layoutInflater.inflate(R.layout.dialog_add_group, null) // Pastikan layout ini ada
 
         val groupNameInput = view.findViewById<TextInputLayout>(R.id.input_group_name)
 
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setView(view)
-            .setPositiveButton("Add", DialogInterface.OnClickListener { dialog, id ->
-                // Implement group addition logic here
-            })
-            .setNegativeButton("Cancel", null)
-            .show()
+            .setPositiveButton("Tambah", null)
+            .setNegativeButton("Batal", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val addButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            addButton.setOnClickListener {
+                val groupName = groupNameInput.editText?.text.toString()
+
+                // Clear previous errors
+                groupNameInput.error = null
+
+                // Validate input
+                var isValid = true
+
+                if (groupName.isEmpty()) {
+                    groupNameInput.error = "Nama kelompok tidak boleh kosong"
+                    isValid = false
+                }
+
+                if (isValid) {
+                    // Log input values
+                    Log.d("AddGroupDialog", "Group Name: $groupName")
+                    // Add group if validation passes
+                    addGroup(groupName)
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        dialog.show()
     }
 
 
+    private fun addGroup(groupName: String) {
+        val url = "${Config.BASE_URL}tambahKelompok.php"
+        val requestQueue = Volley.newRequestQueue(this)
+
+        val params = JSONObject().apply {
+            put("nama", groupName)
+        }
+
+        val jsonObjectRequest = JsonObjectRequest(
+            Request.Method.POST, url, params,
+            { response ->
+                try {
+                    if (response.getString("status") == "success") {
+                        Toast.makeText(this, "Group added successfully", Toast.LENGTH_SHORT).show()
+                        updateRecyclerViewForGroups() // Memperbarui tampilan recycler view untuk kelompok
+                    } else {
+                        Toast.makeText(this, response.getString("message"), Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: JSONException) {
+                    Toast.makeText(this, "Error parsing JSON: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            },
+            { error ->
+                Toast.makeText(this, "Failed to add group: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        )
+
+        requestQueue.add(jsonObjectRequest)
+    }
+
+    private fun updateRecyclerViewForGroups() {
+        val fragment = supportFragmentManager.findFragmentById(R.id.container) as? UserManageFragment
+        fragment?.fetchKelompok() // Memanggil ulang fetchKelompok untuk memperbarui data kelompok
+    }
 
     override fun onClassAdded(newClass: Kelas) {
         val fragment = supportFragmentManager.findFragmentById(R.id.container) as? CourseFragmentAdmin

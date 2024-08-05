@@ -38,6 +38,8 @@ import com.example.mobilelearning.MateriAdapter
 import com.example.mobilelearning.MateriAdapterGuru
 import com.example.mobilelearning.MultipartRequest
 import com.example.mobilelearning.R
+import com.example.mobilelearning.admin.MateriAdminActivity
+import com.example.mobilelearning.admin.MateriAdminActivity.Companion
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
@@ -59,7 +61,8 @@ class MateriGuruActivity : AppCompatActivity() {
     private var selectedFileUri: Uri? = null
     private var selectedClassId: String? = null
     private var kelasId: String? = null
-
+    private var addDialogView: View? = null
+    private var editDialogView: View? = null
 
 
 
@@ -103,9 +106,20 @@ class MateriGuruActivity : AppCompatActivity() {
         if (requestCode == PDF_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             selectedFileUri = data.data
             Log.d("FileSelect", "Selected File URI: $selectedFileUri")
+
+            // Update TextView with selected file name for add dialog
+            addDialogView?.findViewById<TextView>(R.id.file_name_text_view)?.let { fileNameTextView ->
+                val fileName = selectedFileUri?.let { DocumentFile.fromSingleUri(this, it)?.name }
+                fileNameTextView.text = fileName ?: getString(R.string.file_belum_dipilih)
+            }
+
+            // Update TextView with selected file name for edit dialog
+            editDialogView?.findViewById<TextView>(R.id.file_name_text_view)?.let { fileNameTextView ->
+                val fileName = selectedFileUri?.let { DocumentFile.fromSingleUri(this, it)?.name }
+                fileNameTextView.text = fileName ?: getString(R.string.file_belum_dipilih)
+            }
         }
     }
-
     private fun setupRecyclerView(kelasId: String) {
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = MateriAdapterGuru()
@@ -118,12 +132,17 @@ class MateriGuruActivity : AppCompatActivity() {
 
     private fun showAddMaterialDialog() {
         val inflater = LayoutInflater.from(this)
-        val dialogView = inflater.inflate(R.layout.dialog_add_materi, null)
+        addDialogView = inflater.inflate(R.layout.dialog_add_materi, null)
 
-        val titleInput = dialogView.findViewById<TextInputLayout>(R.id.input_judul).editText
-        val descriptionInput = dialogView.findViewById<TextInputLayout>(R.id.input_deskripsi).editText
-        val classDropdown = dialogView.findViewById<MaterialAutoCompleteTextView>(R.id.spinner_kelas)
-        val selectFileButton = dialogView.findViewById<Button>(R.id.button_upload_file)
+        val titleInput = addDialogView!!.findViewById<TextInputLayout>(R.id.input_judul)
+        val descriptionInput = addDialogView!!.findViewById<TextInputLayout>(R.id.input_deskripsi)
+        val classDropdown = addDialogView!!.findViewById<MaterialAutoCompleteTextView>(R.id.spinner_kelas)
+        val selectFileButton = addDialogView!!.findViewById<Button>(R.id.button_upload_file)
+        val fileNameTextView = addDialogView!!.findViewById<TextView>(R.id.file_name_text_view)
+
+        // Reset nama file yang dipilih
+        fileNameTextView.text = getString(R.string.file_belum_dipilih)
+
         fetchClasses(classDropdown)
 
         selectFileButton.setOnClickListener {
@@ -133,26 +152,46 @@ class MateriGuruActivity : AppCompatActivity() {
             startActivityForResult(intent, PDF_REQUEST_CODE)
         }
 
-        // Setting up the adapter for classDropdown
-        val classes = arrayOf("Class 1", "Class 2", "Class 3")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, classes)
-        classDropdown.setAdapter(adapter)
+        val dialog = AlertDialog.Builder(this)
+            .setView(addDialogView)
+            .setPositiveButton("Upload", null) // Jangan set listener disini
+            .setNegativeButton("Cancel", null)
+            .create()
 
-        AlertDialog.Builder(this).apply {
-            setView(dialogView)
-                .setPositiveButton("Upload") { dialog, which ->
-                    if (selectedFileUri != null && selectedClassId != null) {
-                        uploadMaterial(titleInput?.text.toString(), descriptionInput?.text.toString(), selectedClassId!!, selectedFileUri!!)
-                    } else {
-                        Toast.makeText(this@MateriGuruActivity, "Please select a class and a file first", Toast.LENGTH_SHORT).show()
-                    }
+        dialog.setOnShowListener {
+            val uploadButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            uploadButton.setOnClickListener {
+                val title = titleInput.editText?.text.toString()
+                val description = descriptionInput.editText?.text.toString()
+                val classId = selectedClassId
+
+                // Validasi input
+                var isValid = true
+                if (title.isEmpty()) {
+                    titleInput.error = "Judul tidak boleh kosong"
+                    isValid = false
+                }
+                if (description.isEmpty()) {
+                    descriptionInput.error = "Deskripsi tidak boleh kosong"
+                    isValid = false
+                }
+                if (classId.isNullOrEmpty()) {
+                    classDropdown.error = "Kelas tidak boleh kosong"
+                    isValid = false
+                }
+                if (selectedFileUri == null) {
+                    Toast.makeText(this, "File tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                    isValid = false
                 }
 
-            setNegativeButton("Cancel") { dialog, which ->
-                dialog.cancel()
+                if (isValid) {
+                    uploadMaterial(title, description, classId!!, selectedFileUri!!)
+                    dialog.dismiss()
+                }
             }
-            show()
         }
+
+        dialog.show()
     }
 
 
@@ -320,17 +359,22 @@ class MateriGuruActivity : AppCompatActivity() {
 
     private fun showEditMaterialDialog(materi: Materi) {
         val inflater = LayoutInflater.from(this)
-        val dialogView = inflater.inflate(R.layout.dialog_add_materi, null)
+        editDialogView = inflater.inflate(R.layout.dialog_add_materi, null)
 
-        val titleInput = dialogView.findViewById<TextInputLayout>(R.id.input_judul).editText
-        val descriptionInput = dialogView.findViewById<TextInputLayout>(R.id.input_deskripsi).editText
-        val classDropdown = dialogView.findViewById<MaterialAutoCompleteTextView>(R.id.spinner_kelas)
-        val selectFileButton = dialogView.findViewById<Button>(R.id.button_upload_file)
+        val titleInput = editDialogView!!.findViewById<TextInputLayout>(R.id.input_judul).editText
+        val descriptionInput = editDialogView!!.findViewById<TextInputLayout>(R.id.input_deskripsi).editText
+        val classDropdown = editDialogView!!.findViewById<MaterialAutoCompleteTextView>(R.id.spinner_kelas)
+        val selectFileButton = editDialogView!!.findViewById<Button>(R.id.button_upload_file)
+        val fileNameTextView = editDialogView!!.findViewById<TextView>(R.id.file_name_text_view)
 
         // Set current data
         titleInput?.setText(materi.judul)
         descriptionInput?.setText(materi.deskripsi)
         fetchClasses(classDropdown)
+
+        // Reset nama file yang dipilih
+        fileNameTextView.text = getString(R.string.file_belum_dipilih)
+
         selectFileButton.setOnClickListener {
             // Intent to pick file
             val intent = Intent(Intent.ACTION_GET_CONTENT)
@@ -338,16 +382,47 @@ class MateriGuruActivity : AppCompatActivity() {
             startActivityForResult(intent, PDF_REQUEST_CODE)
         }
 
-        AlertDialog.Builder(this).apply {
-            setView(dialogView)
-            setPositiveButton("Update") { dialog, which ->
-                updateMaterial(materi.id, titleInput?.text.toString(), descriptionInput?.text.toString(), selectedClassId, selectedFileUri)
+        val dialog = AlertDialog.Builder(this)
+            .setView(editDialogView)
+            .setPositiveButton("Update", null)  // Prevent default closing behavior
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val updateButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            updateButton.setOnClickListener {
+                val title = titleInput?.text.toString()
+                val description = descriptionInput?.text.toString()
+
+                // Clear previous errors
+                titleInput?.error = null
+                descriptionInput?.error = null
+                classDropdown.error = null
+
+                // Validate inputs
+                var isValid = true
+
+                if (title.isEmpty()) {
+                    titleInput?.error = "Judul tidak boleh kosong"
+                    isValid = false
+                }
+                if (description.isEmpty()) {
+                    descriptionInput?.error = "Deskripsi tidak boleh kosong"
+                    isValid = false
+                }
+                if (selectedClassId.isNullOrEmpty()) {
+                    classDropdown.error = "Kelas tidak boleh kosong"
+                    isValid = false
+                }
+
+                if (isValid) {
+                    updateMaterial(materi.id, title, description, selectedClassId, selectedFileUri)
+                    dialog.dismiss()
+                }
             }
-            setNegativeButton("Cancel") { dialog, which ->
-                dialog.cancel()
-            }
-            show()
         }
+
+        dialog.show()
     }
 
     private fun showDeleteConfirmationDialog(materi: Materi) {
