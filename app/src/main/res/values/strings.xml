@@ -31,5 +31,7 @@
     <string name="hapus_materi">Hapus Materi</string>
     <string name="profil">Profil</string>
     <string name="user_management">User Management</string>
-    <string name="user_manage">user manage</string>
+    <string name="user_manage">Manage User</string>
+    <string name="edit">Edit</string>
+    <string name="hapus">Hapus</string>
 </resources>

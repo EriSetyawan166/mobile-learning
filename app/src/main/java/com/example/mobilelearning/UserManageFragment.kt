@@ -28,14 +28,6 @@ class UserManageFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_user_manage, container, false)
-        recyclerView = view.findViewById(R.id.recyclerViewUsers)
-        recyclerView.layoutManager = LinearLayoutManager(context)
-        adapter = UserManageAdapter(
-            onEdit = { user -> /* Handle edit action */ },
-            onDelete = { user -> /* Handle delete action */ }
-        )
-        recyclerView.adapter = adapter
-
         setupRecyclerView(view)
         setupButtonGroup(view)
 
@@ -63,8 +55,7 @@ class UserManageFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerViewUsers)
         recyclerView.layoutManager = LinearLayoutManager(context)
         adapter = UserManageAdapter(
-            onEdit = { user -> /* Handle edit action */ },
-            onDelete = { user -> /* Handle delete action */ }
+            onDelete = { user -> deleteUser(user) }
         )
         recyclerView.adapter = adapter
     }
@@ -90,6 +81,44 @@ class UserManageFragment : Fragment() {
         )
         Volley.newRequestQueue(requireContext()).add(jsonObjectRequest)
     }
+
+    private fun deleteUser(user: User) {
+        val url = "${Config.BASE_URL}hapusUser.php"
+        val requestQueue = Volley.newRequestQueue(context)
+
+        // Creating a JSONObject directly with the user ID
+        val requestBody = JSONObject().apply {
+            put("user_id", user.id)
+        }
+
+        // Log the request body to ensure the parameters are correct
+        Log.d("deleteUser", "Request body: $requestBody")
+
+        // Creating the delete request with detailed error handling
+        val deleteRequest = JsonObjectRequest(Request.Method.POST, url, requestBody,
+            { response ->
+                // Log server response
+                Log.d("deleteUser", "Server response: $response")
+                Toast.makeText(context, "User deleted successfully", Toast.LENGTH_SHORT).show()
+                fetchUsers()  // Refresh user list
+            },
+            { error ->
+                // Log detailed error message
+                error.networkResponse?.let {
+                    val responseBody = String(it.data)
+                    Log.e("deleteUser", "Failed to delete user. Status code: ${it.statusCode}, Error: $responseBody")
+                    Toast.makeText(context, "Failed to delete user: $responseBody", Toast.LENGTH_LONG).show()
+                } ?: run {
+                    Log.e("deleteUser", "Failed to delete user: ${error.message}")
+                    Toast.makeText(context, "Failed to delete user: ${error.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        )
+
+        requestQueue.add(deleteRequest)
+    }
+
+
 
 
     private fun handleResponse(response: JSONObject, isUser: Boolean) {

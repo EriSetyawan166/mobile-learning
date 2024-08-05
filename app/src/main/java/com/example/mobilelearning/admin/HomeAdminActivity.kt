@@ -350,9 +350,6 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
         requestQueue.add(stringRequest)
     }
 
-
-
-
     fun updateRecyclerView() {
         val fragment = supportFragmentManager.findFragmentById(R.id.container) as? UserManageFragment
         fragment?.fetchUsers()
