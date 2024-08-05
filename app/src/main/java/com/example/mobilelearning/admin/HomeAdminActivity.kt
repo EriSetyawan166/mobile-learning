@@ -120,6 +120,25 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
         val judulInput = view.findViewById<TextInputLayout>(R.id.input_judul)
         val subJudulInput = view.findViewById<TextInputLayout>(R.id.input_sub_judul)
         val deskripsiInput = view.findViewById<TextInputLayout>(R.id.input_deskripsi)
+        val kelompokDropdown = view.findViewById<MaterialAutoCompleteTextView>(R.id.dropdown_kelompok)
+
+        // Fetch dan populate dropdown untuk kelompok
+        val kelompokList = ArrayList<Group>() // Asumsi Group adalah kelas yang memiliki id dan nama
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, kelompokList.map { it.name })
+        kelompokDropdown.setAdapter(adapter)
+
+        fetchGroups {
+            kelompokList.clear()
+            kelompokList.addAll(it)
+            adapter.clear()
+            adapter.addAll(kelompokList.map { group -> group.name })
+            adapter.notifyDataSetChanged()
+        }
+
+        var selectedGroupId: String? = null
+        kelompokDropdown.setOnItemClickListener { _, _, position, _ ->
+            selectedGroupId = kelompokList[position].id // Menyimpan ID yang akan dikirim ke server
+        }
 
         val dialog = AlertDialog.Builder(this)
             .setView(view)
@@ -134,14 +153,8 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
                 val subJudul = subJudulInput.editText?.text.toString()
                 val deskripsi = deskripsiInput.editText?.text.toString()
 
-                // Clear previous errors
-                judulInput.error = null
-                subJudulInput.error = null
-                deskripsiInput.error = null
-
-                // Validate inputs
+                // Validasi input
                 var isValid = true
-
                 if (judul.isEmpty()) {
                     judulInput.error = "Judul tidak boleh kosong"
                     isValid = false
@@ -154,12 +167,13 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
                     deskripsiInput.error = "Deskripsi tidak boleh kosong"
                     isValid = false
                 }
+                if (selectedGroupId == null) {
+                    kelompokDropdown.error = "Deskripsi tidak boleh kosong"
+                    isValid = false
+                }
 
                 if (isValid) {
-                    // Log input values
-                    Log.d("AddClassDialog", "Judul: $judul, Sub Judul: $subJudul, Deskripsi: $deskripsi")
-                    // Add class if validation passes
-                    submitClass(judul, subJudul, deskripsi)
+                    submitClass(judul, subJudul, deskripsi, selectedGroupId!!)
                     dialog.dismiss()
                 }
             }
@@ -168,8 +182,38 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
         dialog.show()
     }
 
+    private fun fetchAndPopulateKelompok(dropdown: MaterialAutoCompleteTextView) {
+        val url = "${Config.BASE_URL}/ambilKelompok.php"
+        val requestQueue = Volley.newRequestQueue(this)
 
-    private fun submitClass(judul: String, subJudul: String, deskripsi: String) {
+        val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
+            { response ->
+                try {
+                    if (response.getString("status") == "success") {
+                        val kelompokArray = response.getJSONArray("data")
+                        val kelompokList = ArrayList<String>()
+                        for (i in 0 until kelompokArray.length()) {
+                            val kelompok = kelompokArray.getJSONObject(i).getString("nama")
+                            kelompokList.add(kelompok)
+                        }
+                        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, kelompokList)
+                        dropdown.setAdapter(adapter)
+                    } else {
+                        Toast.makeText(this, response.getString("message"), Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: JSONException) {
+                    Toast.makeText(this, "Error parsing JSON: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            },
+            { error ->
+                Toast.makeText(this, "Failed to fetch kelompok: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        )
+
+        requestQueue.add(jsonObjectRequest)
+    }
+
+    private fun submitClass(judul: String, subJudul: String, deskripsi: String, kelompokId: String) {
         val requestQueue = Volley.newRequestQueue(this)
         val url = "${Config.BASE_URL}/tambahKelas.php"
 
@@ -177,6 +221,7 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
         params["judul"] = judul
         params["sub_judul"] = subJudul
         params["deskripsi"] = deskripsi
+        params["kelompok"] = kelompokId
 
         val stringRequest = object : StringRequest(
             Method.POST, url,
@@ -185,7 +230,7 @@ class HomeAdminActivity : AppCompatActivity(), CourseFragmentAdmin.OnClassAddedL
                     val jsonResponse = JSONObject(response)
                     if (jsonResponse.getString("status") == "success") {
                         val kelasId = jsonResponse.getString("id")
-                        val newKelas = Kelas(kelasId, judul, subJudul, deskripsi)
+                        val newKelas = Kelas(kelasId, judul, subJudul, deskripsi, kelompok)
                         onClassAdded(newKelas)  // Memanggil interface method
                         Toast.makeText(this, "Kelas berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
                     } else {

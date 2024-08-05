@@ -102,12 +102,14 @@ class CourseFragmentGuru : Fragment() {
                     id = item.getString("id"),
                     judul = item.getString("judul"),
                     sub_judul = item.getString("sub_judul"),
-                    deskripsi = item.getString("deskripsi")
+                    deskripsi = item.getString("deskripsi"),
+                    kelompok = item.getString("kelompok")  // Menambahkan kelompok
                 )
                 kelasList.add(kelas)
             }
             kelasAdapter.notifyDataSetChanged()
         }
     }
+
 
 }

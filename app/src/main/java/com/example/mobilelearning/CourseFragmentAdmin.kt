@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,6 +28,10 @@ import org.json.JSONObject
 
 class CourseFragmentAdmin : Fragment() {
 
+    interface DataChangeListener {
+        fun onDataAdded()
+    }
+    private var kelompokMap: HashMap<String, String> = hashMapOf()
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recyclerView: RecyclerView
     private lateinit var kelasAdapter: KelasAdapterAdmin
@@ -70,6 +76,7 @@ class CourseFragmentAdmin : Fragment() {
         }
 
         fetchClasses()
+        fetchKelompok()
 
         return view
     }
@@ -105,13 +112,15 @@ class CourseFragmentAdmin : Fragment() {
                     id = item.getString("id"),
                     judul = item.getString("judul"),
                     sub_judul = item.getString("sub_judul"),
-                    deskripsi = item.getString("deskripsi")
+                    deskripsi = item.getString("deskripsi"),
+                    kelompok = item.getString("kelompok")  // Menambahkan kelompok
                 )
                 kelasList.add(kelas)
             }
             kelasAdapter.notifyDataSetChanged()
         }
     }
+
 
     private fun showDeleteConfirmationDialog(kelas: Kelas) {
         AlertDialog.Builder(requireContext()).apply {
@@ -167,11 +176,18 @@ class CourseFragmentAdmin : Fragment() {
         val judulInput = view.findViewById<TextInputLayout>(R.id.input_judul)
         val subJudulInput = view.findViewById<TextInputLayout>(R.id.input_sub_judul)
         val deskripsiInput = view.findViewById<TextInputLayout>(R.id.input_deskripsi)
+        val kelompokSpinner = view.findViewById<TextInputLayout>(R.id.input_kelompok).editText as AutoCompleteTextView
 
-        // Mengisi field dengan data kelas yang akan diedit
+
+        // Set existing values
         judulInput.editText?.setText(kelas.judul)
         subJudulInput.editText?.setText(kelas.sub_judul)
         deskripsiInput.editText?.setText(kelas.deskripsi)
+
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, kelompokMap.keys.toList())
+        kelompokSpinner.setAdapter(adapter)
+        // Set the spinner text to the kelompok name based on the saved kelompok ID
+        kelompokSpinner.setText(kelompokMap.filter { it.value == kelas.kelompok }.keys.firstOrNull(), false)
 
         val dialog = AlertDialog.Builder(requireContext())
             .setView(view)
@@ -185,19 +201,20 @@ class CourseFragmentAdmin : Fragment() {
                 val judul = judulInput.editText?.text.toString()
                 val subJudul = subJudulInput.editText?.text.toString()
                 val deskripsi = deskripsiInput.editText?.text.toString()
+                val kelompok = kelompokSpinner.text.toString()
+                val kelompokId = kelompokMap[kelompok] ?: ""
 
-                // Clear previous errors
                 judulInput.error = null
                 subJudulInput.error = null
                 deskripsiInput.error = null
-
-                // Validate inputs
+                kelompokSpinner.error = null
                 var isValid = true
 
                 if (judul.isEmpty()) {
                     judulInput.error = "Judul tidak boleh kosong"
                     isValid = false
                 }
+
                 if (subJudul.isEmpty()) {
                     subJudulInput.error = "Sub judul tidak boleh kosong"
                     isValid = false
@@ -207,11 +224,16 @@ class CourseFragmentAdmin : Fragment() {
                     isValid = false
                 }
 
+                if (kelompok.isEmpty()) {
+                    deskripsiInput.error = "Kelompok tidak boleh kosong"
+                    isValid = false
+                }
+
                 if (isValid) {
                     // Log input values
                     Log.d("EditClassDialog", "Judul: $judul, Sub Judul: $subJudul, Deskripsi: $deskripsi")
                     // Update class if validation passes
-                    updateClass(kelas.id, judul, subJudul, deskripsi)
+                    updateClass(kelas.id, judul, subJudul, deskripsi, kelompokId)
                     dialog.dismiss()
                 }
             }
@@ -221,8 +243,43 @@ class CourseFragmentAdmin : Fragment() {
     }
 
 
-    private fun updateClass(id: String, judul: String, subJudul: String, deskripsi: String) {
-        Log.d("updateClass", "Updating class with id: $id, judul: $judul, sub_judul: $subJudul, deskripsi: $deskripsi")
+    fun fetchKelompok() {
+        val url = "${Config.BASE_URL}ambilkelompok.php"
+        val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
+            { response ->
+                kelompokMap.clear()
+                kelompokMap.putAll(parseKelompokResponse(response))
+                // Trigger any UI update or callback if necessary
+            },
+            { error ->
+                Toast.makeText(context, "Failed to fetch data: ${error.message}", Toast.LENGTH_LONG).show()
+            }
+        )
+        Volley.newRequestQueue(requireContext()).add(jsonObjectRequest)
+    }
+
+
+    private fun parseKelompokResponse(response: JSONObject): HashMap<String, String> {
+        val kelompokMap = HashMap<String, String>()
+        if (response.has("data")) {
+            val dataArray = response.getJSONArray("data")
+            for (i in 0 until dataArray.length()) {
+                val kelompokObject = dataArray.getJSONObject(i)
+                val id = kelompokObject.getString("id")
+                val nama = kelompokObject.getString("nama")
+                kelompokMap[nama] = id
+            }
+        } else {
+            Log.e("parseKelompokResponse", "No 'data' key found in the JSON response")
+        }
+        return kelompokMap
+    }
+
+
+
+
+    private fun updateClass(id: String, judul: String, subJudul: String, deskripsi: String, kelompok:String) {
+        Log.d("updateClass", "Updating class with id: $id, judul: $judul, sub_judul: $subJudul, deskripsi: $deskripsi, kelompok: $kelompok")
 
         val requestQueue = Volley.newRequestQueue(requireContext())
         val url = "${Config.BASE_URL}/editKelas.php"
@@ -232,14 +289,17 @@ class CourseFragmentAdmin : Fragment() {
         params["judul"] = judul
         params["sub_judul"] = subJudul
         params["deskripsi"] = deskripsi
+        params["kelompok"] = kelompok
 
         val stringRequest = object : StringRequest(
             Request.Method.POST, url,
             Response.Listener<String> { response ->
+                Log.d("updateClass", "Received response: $response")
                 try {
                     val jsonResponse = JSONObject(response)
+                    Log.d("updateClass", "Parsed JSON response: ${jsonResponse.toString(2)}")
                     if (jsonResponse.getString("status") == "success") {
-                        val updatedKelas = Kelas(id, judul, subJudul, deskripsi)
+                        val updatedKelas = Kelas(id, judul, subJudul, deskripsi, kelompok)
                         kelasAdapter.updateClass(updatedKelas)
                         listener?.onClassUpdated(updatedKelas)
                         Toast.makeText(requireContext(), "Kelas berhasil diupdate!", Toast.LENGTH_SHORT).show()
@@ -247,6 +307,7 @@ class CourseFragmentAdmin : Fragment() {
                         Toast.makeText(requireContext(), jsonResponse.getString("message"), Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: JSONException) {
+                    Log.e("updateClass", "Error parsing JSON: ${e.message}")
                     Toast.makeText(requireContext(), "Error parsing JSON: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             },
@@ -290,5 +351,7 @@ class CourseFragmentAdmin : Fragment() {
     fun updateClassInAdapter(updatedClass: Kelas) {
         kelasAdapter.updateClass(updatedClass)
     }
+
+
 
 }

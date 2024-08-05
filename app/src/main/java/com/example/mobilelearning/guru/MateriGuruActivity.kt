@@ -259,7 +259,7 @@ class MateriGuruActivity : AppCompatActivity() {
                     val classList = ArrayList<Kelas>()
                     for (i in 0 until classesArray.length()) {
                         val classObj = classesArray.getJSONObject(i)
-                        classList.add(Kelas(classObj.getString("id"), classObj.getString("judul"), classObj.getString("sub_judul"), classObj.getString("deskripsi")))
+                        classList.add(Kelas(classObj.getString("id"), classObj.getString("judul"), classObj.getString("sub_judul"), classObj.getString("deskripsi"), classObj.getString("kelompok")))
                     }
                     updateClassDropdown(classList, classDropdown, kelasId ?: "")
                 } catch (e: JSONException) {
